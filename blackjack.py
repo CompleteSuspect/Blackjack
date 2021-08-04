@@ -189,9 +189,9 @@ def blackjack():
         rep += 1
 
     for player in players:
-        if get_score(player.hands[0]) == 21:
+        player.hands[0].score = get_score(player.hands[0])
+        if player.hands[0].score == 21:
             print(f'{player.name} has a blackjack!\n')
-
 
     for player in [p for p in players if p.hands[0].score < 21]: # main player move loop
         for hand in player.hands: # for each of the players hands
@@ -221,7 +221,7 @@ def blackjack():
                 for card in dealer.hand:
                     print(card)
 
-                player_move = input(f"\n{player}, please enter your move ({', '.join(moves)}): ").lower()
+                player_move = input(f"\n{player}, please enter your move: ({', '.join(moves)}): ").lower()
 
                 if player_move not in moves:
                     print('Invalid move!')
@@ -259,7 +259,7 @@ def blackjack():
                     new_deck.bid = hand.bid
                     new_deck.add_card(hand.draw_card(1)) #adds a card to the newest created deck
                     player.hands.append(new_deck)
-                    print(f'{player.name} has split their hand.')
+                    print(f'\n{player.name} has split their hand.')
                     continue
 
             if hand.score > 21:
