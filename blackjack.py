@@ -27,7 +27,17 @@ class Deck():
         self.score = 0
 
     def __iter__(self):
-        return iter(self.cards)
+        self.idx = 0
+        return self
+
+    def __next__(self):
+        try:
+            card = self.cards[self.idx]
+        except IndexError:
+            raise StopIteration
+
+        self.idx += 1
+        return card
 
     def __getitem__(self, idx):
         return self.cards[idx]
@@ -53,7 +63,7 @@ class Deck():
         if len(self.cards):
             random.shuffle(self.cards)
         else:
-            print('shuffle error: cards is empty')
+            print('shuffle error: deck is empty')
 
     def draw_card(self, idx = 0):
         try:
@@ -83,17 +93,34 @@ class Dealer():
         self.hand = Deck()
         self.score = 0
 
-def set_players(player_max = 5):
-    player_lst = []
+def set_players(player_lst, player_max = 5):
+
+    players_copy = player_lst[:]
+
+    for player in players_copy:
+        choice = input(f'{player.name}, play again? (yes/no): ').lower()
+
+        if choice == 'no':
+            player_lst.remove(player)
+
+        elif choice == 'yes':
+            pass
+
+        else:
+            print('Invalid choice')
+            continue
+
+    print('-------------------------Adding Players-------------------------\n')
+
 
     while len(player_lst) < player_max:
         good_name = True
         player_name = input(f'Player {len(player_lst) + 1} of {player_max}, please input player name or press enter to continue: ')
 
-        if len(player_lst) > 0 and len(player_name) == 0:
+        if len(player_name) == 0:
             break
 
-        if len(player_name) != 0:
+        if len(player_name):
             for ch in player_name.lower():                                          #checking for valid name.
                 if ch not in 'abcdefghijklmnopqrstuvwqxyz':
                     print('Name can only contain characters from a-z! \n')
@@ -131,204 +158,245 @@ def get_score(hand, face_max = 10):
     return score
 
 def blackjack():
-    print('-------------------------Blackjack-------------------------\n')
-    print('-------------------------Adding Players-------------------------\n')
-
-    players = set_players()
-
-    print(f'\nStarting game with {len(players)} players!\n')
-
-    dealer = Dealer()    # Adding the dealer to the game which is a sub-class of Player()
-    shoe = Deck()               # here the shoe is set up with 4 packs of cards and then shuffled.
+    players = []
+    shoe = Deck() # Here the shoe is set up with 4 packs of cards and then shuffled.
     shoe.card_52(4)             # You can add more or less packs in the argument.
     shoe.shuffle()
 
-    print('-------------------------Adding Bids-----------------------------\n')
+    while True:
+        players = set_players(players)
+        dealer = Dealer()    # Adding the dealer to the game which is a sub-class of Player()
+        if not players:
+            print('Thanks for playing')
+            break
 
-    for player in players: #bid loop
-        player.hands.append(Deck())
-        print(f'\n{player}, you have £{player.money}.')
+        print(f'\nStarting game with {len(players)} players!\n')
 
-        while True:
-            try:
-                bid = int(input(f'Please enter a bid between 2 and {player.money}: '))
-            except:
-                print('Invalid bid')
-                continue
 
-            if bid > 0 and bid <= player.money:
-                print(f'{player} has entered bid of £{bid}!')
-                player.hands[0].bid = bid
-                player.money -= bid
-                break
+        print('\n-------------------------Adding Bids-----------------------------\n')
+
+        for player in players: #bid loop
+            player.hands = []
+            player.hands.append(Deck()) #adding Deck object to player
+            print(f'\n{player}, you have £{player.money}.')
+
+            while True:
+                try:
+                    bid = int(input(f'Please enter a bid between 1 and {player.money}: '))
+                except:
+                    print('Invalid bid')
+                    continue
+
+                if bid > 0 and bid <= player.money:
+                    print(f'{player} has entered bid of £{bid}!')
+                    player.hands[0].bid = bid
+                    player.money -= bid
+                    break
+
+                else:
+                    print('Invalid bid!')
+                    continue
+
+        print('\n-------------------------Building Hands-------------------------\n')
+
+        rep = 0
+        while rep < 2: # player hand builder loop
+            for player in players:
+                time.sleep(1)
+                if not len(shoe.cards): # if shoe is empty, add more packs and shuffle
+                    print('\nShoe is empty, adding more cards')
+                    shoe.card_52(4)
+                    shoe.shuffle()
+
+                card = shoe.draw_card()
+                player.hands[0].add_card(card)
+                print(f"Dealer added {card} to {player}'s hand")
+
+            time.sleep(1)
+            if not len(shoe.cards): # if shoe is empty, add more packs and shuffle
+                print('\nShoe is empty, adding more cards')
+                shoe.card_52(4)
+                shoe.shuffle()
+
+            card = shoe.draw_card()
+            if rep == 1:                    #conditional to hide the dealers 2nd card
+                card.flip()
+                dealer.hand.add_card(card)
 
             else:
-                print('Invalid bid!')
-                continue
+                dealer.hand.add_card(card)
 
-    print('-------------------------Building Hands-------------------------\n')
+            print(f'Dealer added {card} to his own hand.\n')
+            rep += 1
 
-    rep = 0
-    while rep < 2: # player hand builder loop
         for player in players:
-            #time.sleep(1)
-            card = shoe.draw_card()
-            player.hands[0].add_card(card)
-            print(f"Dealer added {card} to {player}'s hand")
+            player.hands[0].score = get_score(player.hands[0])
+            if player.hands[0].score == 21:
+                print(f'{player.name} has a blackjack!')
 
-        #time.sleep(1)
-        card = shoe.draw_card()
-        if rep == 1:                    #conditional to hide the dealers 2nd card
-            card.flip()
-            dealer.hand.add_card(card)
+        for player in [p for p in players if p.hands[0].score < 21]: # main player move loop
+            for hand in player.hands: # for each of the players hands
+                hand.score = get_score(hand)
 
-        else:
-            dealer.hand.add_card(card)
+                while hand.score < 21: # while the hand is not bust or blackjack
+                    moves = ['hit', 'stand']
 
-        print(f'Dealer added {card} to his own hand.\n')
-        rep += 1
+                    if player.money >= hand.bid: # allow player to double
+                        moves.append('double')
 
-    for player in players:
-        player.hands[0].score = get_score(player.hands[0])
-        if player.hands[0].score == 21:
-            print(f'{player.name} has a blackjack!\n')
+                    if (len(hand) == 2 and hand[0].rank == hand[1].rank) and (player.money >= hand.bid):# allow player to split
+                        moves.append('split')
 
-    for player in [p for p in players if p.hands[0].score < 21]: # main player move loop
-        for hand in player.hands: # for each of the players hands
-            hand.score = get_score(hand)
+                    if not player.hands.index(hand):#player turn display
+                        print(f"\n-------------------------{player}'s turn.-------------------------\n")
 
-            while get_score(hand) < 21: # while the hand is not bust or blackjack
+                    else :
+                        print(f"\n-------------------------{player.name}'s split hand #{player.hands.index(hand)}-------------------------\n")
 
-                moves = ['hit', 'stand']
-
-                if player.money >= hand.bid: # allow player to double
-                    moves.append('double')
-
-                if len(hand) == 2 and hand[0].rank == hand[1].rank and player.money >= hand.bid:# allow player to split
-                    moves.append('split')
-
-                if not player.hands.index(hand):
-                    print(f"\n-------------------------{player}'s turn.-------------------------\n")
-
-                else :
-                    print(f"\n-------------------------{player.name}'s split hand #{player.hands.index(hand)}-------------------------\n")
-
-                print('\nYou have:')
-                for card in hand:
-                    print(card)
-
-                print('\nDealer has:')
-                for card in dealer.hand:
-                    print(card)
-
-                player_move = input(f"\n{player}, please enter your move: ({', '.join(moves)}): ").lower()
-
-                if player_move not in moves:
-                    print('Invalid move!')
-                    continue
-
-                elif player_move == 'stand':
-                    print(f'\n{player} stands with a score of {hand.score}')
-                    break
-
-                elif player_move == 'hit':
-                    card = shoe.draw_card()
-                    hand.add_card(card)
-                    hand.score = get_score(hand)
                     time.sleep(1)
-                    print(f"\nDealer added {card} to {player}'s hand")
-                    time.sleep(1)
-                    continue
+                    print('You have:')
+                    for card in hand:
+                        print(card)
 
-                elif player_move == 'double':
-                    player.money -= hand.bid
-                    hand.bid += hand.bid
-                    print(f'\n{player} has doubled down and has doubled their bid to {hand.bid}')
-                    card = shoe.draw_card()
-                    hand.add_card(card)
-                    time.sleep(1)
-                    print(f"\nDealer added {card} to {player}'s hand")
-                    time.sleep(1)
-                    hand.score = get_score(hand)
-                    print(f'\n{player} stands with a score of {hand.score}')
-                    break
+                    print('\nDealer has:')
+                    for card in dealer.hand:
+                        print(card)
 
-                elif player_move =='split':
-                    new_deck = Deck()
-                    player.money -= hand.bid
-                    new_deck.bid = hand.bid
-                    new_deck.add_card(hand.draw_card(1)) #adds a card to the newest created deck
-                    player.hands.append(new_deck)
-                    print(f'\n{player.name} has split their hand.')
-                    continue
+                    player_move = input(f"\n{player}, please enter your move: ({', '.join(moves)}): ").lower()
 
-            if hand.score > 21:
-                print(f'\n{player} has bust with a score of {hand.score}!')
-                print(f'{player} has lost their bid of £{hand.bid}!\n')
-                player.bid = 0
+                    if player_move not in moves:
+                        print('Invalid move!')
+                        continue
 
-            elif hand.score == 21:
-                print(f'{player} has a blackjack!\n')
+                    elif player_move == 'stand':
+                        print(f'\n{player} stands with a score of {hand.score}')
+                        break
 
-    print("\n-------------------------Dealer's Turn-------------------------\n")
+                    elif player_move == 'hit':
+                        if not len(shoe.cards): # if shoe is empty, add more packs and shuffle
+                            print('\nShoe is empty, adding more cards')
+                            shoe.card_52(4)
+                            shoe.shuffle()
 
-    dealer.hand[1].flip()
-    print(f"Dealer reveals face down card: {dealer.hand[1]}")
-    dealer.score = get_score(dealer.hand) # adds the dealer.score attribute
-    print('\nDealer has:')
+                        card = shoe.draw_card()
+                        hand.add_card(card)
+                        print(f"\nDealer added {card} to {player}'s hand")
+                        time.sleep(1)
+                        hand.score = get_score(hand)
+                        continue
 
-    for card in dealer.hand:
-        print(card)
+                    elif player_move == 'double':
+                        if not len(shoe.cards): # if shoe is empty, add more packs and shuffle
+                            print('\nShoe is empty, adding more cards')
+                            shoe.card_52(4)
+                            shoe.shuffle()
 
-    time.sleep(1)
-    print('')
+                        player.money -= hand.bid
+                        hand.bid += hand.bid
+                        print(f'\n{player} has doubled down and has doubled their bid to {hand.bid}')
+                        card = shoe.draw_card()
+                        hand.add_card(card)
+                        time.sleep(1)
+                        print(f"\nDealer added {card} to {player}'s hand")
+                        time.sleep(1)
+                        hand.score = get_score(hand)
+                        print(f'\n{player} stands with a score of {hand.score}')
+                        break
 
-    while dealer.score < 17: #the dealer must hit until the hand total is 17 or more.
-        card = shoe.draw_card()
-        print(f'Dealer adds {card} to his hand.')
-        dealer.hand.add_card(card)
-        dealer.score = get_score(dealer.hand)
+                    elif player_move =='split':
+                        new_deck = Deck() # A new deck is created
+                        player.money -= hand.bid
+                        new_deck.bid = hand.bid
+                        new_deck.add_card(hand.draw_card(1))
+                        player.hands.append(new_deck)
+                        print(f'\n{player.name} has split their hand.')
+                        hand.score = get_score(hand)
+                        continue
+
+                if hand.score > 21:
+                    print(f'\n{player} has bust with a score of {hand.score}!')
+                    print(f'{player} has lost their bid of £{hand.bid}!\n')
+
+                elif hand.score == 21:
+                    print(f'\n{player} has a blackjack!\n')
+
+        print("\n-------------------------Dealer's Turn-------------------------\n")
+
+        dealer.hand[1].flip()
+        print(f"Dealer reveals face down card: {dealer.hand[1]}")
+        dealer.score = get_score(dealer.hand) # adds the dealer.score attribute
+        print('\nDealer has:')
+
+        for card in dealer.hand:
+            print(card)
+
         time.sleep(1)
+        print('')
 
-    if dealer.score > 21:
-        print(f'\nDealer has bust!\n')
+        while dealer.score < 17: #the dealer must hit until the hand total is 17 or more.
+            if not len(shoe.cards): # if shoe is empty, add more packs and shuffle
+                print('\nShoe is empty, adding more cards')
+                shoe.card_52(4)
+                shoe.shuffle()
 
-    elif dealer.score == 21:
-        print(f'\nDealer has a blackjack!\n')
+            card = shoe.draw_card()
+            print(f'Dealer adds {card} to his hand.')
+            dealer.hand.add_card(card)
+            dealer.score = get_score(dealer.hand)
+            time.sleep(1)
 
-    else:
-        print(f'\nDealer stands with a score of {dealer.score}\n')
+        if dealer.score > 21:
+            print(f'\nDealer has bust!\n')
 
-    print("\n-------------------------Calculating Winnings-------------------------\n")
-
-    for player in players:
-        bid_total = 0 #this is displayed when a player loses
-        winnings = 0
-
-        for hand in player.hands:
-            bid_total += hand.bid
-
-            if (hand.score == 21 and len(hand) == 2) and (dealer.score != 21):#if player has a natural blackjack and dealer does not have 21
-                winnings += math.ceil(hand.bid * 2.5)
-
-            elif dealer.score < 22 and hand.score < 22: # if dealer and player has not bust
-                if hand.score > dealer.score:
-                    winnings += hand.bid * 2
-
-                elif hand.score == dealer.score:
-                    winnings += hand.bid
-
-            elif dealer.score > 21 and hand.score < 22: # if dealer busts and player has not bust
-                winnings += hand.bid * 2
-
-        player.money = winnings
-
-        if winnings > 0:
-            print(f'{player.name} has won {winnings}!')
+        elif dealer.score == 21:
+            print(f'\nDealer has a blackjack!\n')
 
         else:
-            print(f'{player.name} has lost {bid_total}')
+            print(f'\nDealer stands with a score of {dealer.score}\n')
 
-        print(player.name, player.money)
+        print("\n-------------------------Calculating Winnings-------------------------\n")
+
+        for player in players:
+            loss_total = 0 #this is displayed when a player loses money
+            winnings = 0
+
+            for hand in player.hands:
+
+                if hand.score > 21: # if player is bust
+                    loss_total += hand.bid
+
+                elif (hand.score == 21) and (len(hand) == 2) and (dealer.score < 21):#if player has a natural blackjack and dealer does not have 21
+                    winnings += math.ceil(hand.bid * 2.5)
+
+                elif dealer.score > 21: # if dealer busts
+                    if hand.score < 22:
+                        winnings += hand.bid * 2
+
+                elif dealer.score < 22: # if dealer does not bust
+                    if hand.score > dealer.score:
+                        winnings += hand.bid * 2
+
+                    elif hand.score == dealer.score:
+                        winnings += hand.bid
+
+                    else:
+                        loss_total += hand.bid
+
+            if winnings > 0:
+                print(f'{player.name} has won £{winnings}!')
+                player.money += winnings
+
+            else:
+                print(f'{player.name} has lost £{loss_total}')
+
+        players_copy = players[:]
+
+        print('')
+        for player in players_copy:
+                if player.money == 0:
+                    print(f'{player.name} is broke and can no longer play!')
+                    players.remove(player)
+
+        print('')
 
 blackjack()
