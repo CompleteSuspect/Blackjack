@@ -110,7 +110,7 @@ def set_players(player_lst, player_max = 5):
             print('Invalid choice')
             continue
 
-    print('-------------------------Adding Players-------------------------\n')
+    print('\n-------------------------Adding Players-------------------------\n')
 
 
     while len(player_lst) < player_max:
@@ -158,6 +158,7 @@ def get_score(hand, face_max = 10):
     return score
 
 def blackjack():
+    print('-------------------------Blackjack-------------------------\n')
     players = []
     shoe = Deck() # Here the shoe is set up with 4 packs of cards and then shuffled.
     shoe.card_52(4)             # You can add more or less packs in the argument.
@@ -396,7 +397,5 @@ def blackjack():
                 if player.money == 0:
                     print(f'{player.name} is broke and can no longer play!')
                     players.remove(player)
-
-        print('')
 
 blackjack()
