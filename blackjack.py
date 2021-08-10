@@ -386,8 +386,8 @@ def blackjack():
                         loss_total += hand.bid
 
             if winnings > 0:
-                print(f'{player.name} has won £{winnings}! and now has £{player.money}')
                 player.money += winnings
+                print(f'{player.name} has won £{winnings}! and now has £{player.money}')
 
             else:
                 print(f'{player.name} has lost £{loss_total} and now has £{player.money}')
