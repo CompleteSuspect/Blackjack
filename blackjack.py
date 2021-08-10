@@ -98,17 +98,19 @@ def set_players(player_lst, player_max = 5):
     players_copy = player_lst[:]
 
     for player in players_copy:
-        choice = input(f'{player.name}, play again? (yes/no): ').lower()
+        while True:
+            choice = input(f'{player.name}, play again? (yes/no): ').lower()
 
-        if choice == 'no':
-            player_lst.remove(player)
+            if choice == 'no':
+                player_lst.remove(player)
+                break
 
-        elif choice == 'yes':
-            pass
+            elif choice == 'yes':
+                break
 
-        else:
-            print('Invalid choice')
-            continue
+            else:
+                print('Invalid choice')
+                continue
 
     print('\n-------------------------Adding Players-------------------------\n')
 
@@ -384,11 +386,11 @@ def blackjack():
                         loss_total += hand.bid
 
             if winnings > 0:
-                print(f'{player.name} has won £{winnings}!')
+                print(f'{player.name} has won £{winnings}! and now has £{player.money}')
                 player.money += winnings
 
             else:
-                print(f'{player.name} has lost £{loss_total}')
+                print(f'{player.name} has lost £{loss_total} and now has £{player.money}')
 
         players_copy = players[:]
 
