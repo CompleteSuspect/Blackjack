@@ -387,14 +387,14 @@ def blackjack():
 
             if winnings > 0:
                 player.money += winnings
-                print(f'{player.name} has won £{winnings}! and now has £{player.money}')
+                print(f'{player.name} has won £{winnings - hand.bid} and now has £{player.money}')
 
             else:
                 print(f'{player.name} has lost £{loss_total} and now has £{player.money}')
 
-        players_copy = players[:]
-
         print('')
+        
+        players_copy = players[:]
         for player in players_copy:
                 if player.money == 0:
                     print(f'{player.name} is broke and can no longer play!')
