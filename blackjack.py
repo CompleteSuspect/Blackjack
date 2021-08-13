@@ -27,17 +27,7 @@ class Deck():
         self.score = 0
 
     def __iter__(self):
-        self.idx = 0
-        return self
-
-    def __next__(self):
-        try:
-            card = self.cards[self.idx]
-        except IndexError:
-            raise StopIteration
-
-        self.idx += 1
-        return card
+        return iter(self.cards)
 
     def __getitem__(self, idx):
         return self.cards[idx]
@@ -69,7 +59,13 @@ class Deck():
         try:
             return self.cards.pop(idx)
         except IndexError as e:
-            print('draw_card error:', e)
+            if not len(self.cards): # if shoe is empty, add more packs and shuffle
+                print('\n\nShoe is empty, adding more cards!\n\n')
+                self.card_52(4)
+                self.shuffle()
+                return self.cards.pop(idx)
+            else:
+                print('draw_card error:', e)
 
     def add_card(self, card):
         if type(card) == Card:
@@ -163,12 +159,12 @@ def blackjack():
     print('-------------------------Blackjack-------------------------\n')
     players = []
     shoe = Deck() # Here the shoe is set up with 4 packs of cards and then shuffled.
-    shoe.card_52(4)             # You can add more or less packs in the argument.
+    shoe.card_52(1)             # You can add more or less packs in the argument.
     shoe.shuffle()
 
     while True:
         players = set_players(players)
-        dealer = Dealer()    # Adding the dealer to the game which is a sub-class of Player()
+        dealer = Dealer()
         if not players:
             print('Thanks for playing')
             break
@@ -206,21 +202,12 @@ def blackjack():
         while rep < 2: # player hand builder loop
             for player in players:
                 time.sleep(1)
-                if not len(shoe.cards): # if shoe is empty, add more packs and shuffle
-                    print('\nShoe is empty, adding more cards')
-                    shoe.card_52(4)
-                    shoe.shuffle()
 
                 card = shoe.draw_card()
                 player.hands[0].add_card(card)
                 print(f"Dealer added {card} to {player}'s hand")
 
             time.sleep(1)
-            if not len(shoe.cards): # if shoe is empty, add more packs and shuffle
-                print('\nShoe is empty, adding more cards')
-                shoe.card_52(4)
-                shoe.shuffle()
-
             card = shoe.draw_card()
             if rep == 1:                    #conditional to hide the dealers 2nd card
                 card.flip()
@@ -276,11 +263,6 @@ def blackjack():
                         break
 
                     elif player_move == 'hit':
-                        if not len(shoe.cards): # if shoe is empty, add more packs and shuffle
-                            print('\nShoe is empty, adding more cards')
-                            shoe.card_52(4)
-                            shoe.shuffle()
-
                         card = shoe.draw_card()
                         hand.add_card(card)
                         print(f"\nDealer added {card} to {player}'s hand")
@@ -289,11 +271,6 @@ def blackjack():
                         continue
 
                     elif player_move == 'double':
-                        if not len(shoe.cards): # if shoe is empty, add more packs and shuffle
-                            print('\nShoe is empty, adding more cards')
-                            shoe.card_52(4)
-                            shoe.shuffle()
-
                         player.money -= hand.bid
                         hand.bid += hand.bid
                         print(f'\n{player} has doubled down and has doubled their bid to {hand.bid}')
@@ -337,11 +314,6 @@ def blackjack():
         print('')
 
         while dealer.score < 17: #the dealer must hit until the hand total is 17 or more.
-            if not len(shoe.cards): # if shoe is empty, add more packs and shuffle
-                print('\nShoe is empty, adding more cards')
-                shoe.card_52(4)
-                shoe.shuffle()
-
             card = shoe.draw_card()
             print(f'Dealer adds {card} to his hand.')
             dealer.hand.add_card(card)
@@ -393,7 +365,7 @@ def blackjack():
                 print(f'{player.name} has lost £{loss_total} and now has £{player.money}')
 
         print('')
-        
+
         players_copy = players[:]
         for player in players_copy:
                 if player.money == 0:
