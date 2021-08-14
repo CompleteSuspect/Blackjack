@@ -35,7 +35,7 @@ class Deck():
     def __len__(self):
         return len(self.cards)
 
-    def card_52(self, reps = 1): #Generate a standard pack of 52 cards.
+    def card_52(self, reps = 1, face_max = 10): #Generate a standard pack of 52 cards.
         suites = ['Clubs','Diamonds','Hearts','Spades']
         ranks = ['Ace','2','3','4','5','6','7','8','9','10','Jack','Queen','King']
 
@@ -44,7 +44,12 @@ class Deck():
             for suite in suites:
                 score = 1
                 for rank in ranks:
-                    self.cards.append(Card(score, rank, suite))
+                    if score < face_max:
+                        self.cards.append(Card(score, rank, suite))
+
+                    else:
+                        self.cards.append(Card(face_max, rank, suite))
+
                     score += 1
 
             rep +=1
@@ -52,24 +57,28 @@ class Deck():
     def shuffle(self):
         if len(self.cards):
             random.shuffle(self.cards)
+
         else:
             print('shuffle error: deck is empty')
 
     def draw_card(self, idx = 0):
         try:
             return self.cards.pop(idx)
+
         except IndexError as e:
             if not len(self.cards): # if shoe is empty, add more packs and shuffle
                 print('\n\nShoe is empty, adding more cards!\n\n')
                 self.card_52(4)
                 self.shuffle()
                 return self.cards.pop(idx)
+
             else:
                 print('draw_card error:', e)
 
     def add_card(self, card):
         if type(card) == Card:
             self.cards.append(card)
+
         else:
             print('add_card error: appended object is not of type: Card')
 
@@ -136,7 +145,7 @@ def set_players(player_lst, player_max = 5):
 
     return player_lst
 
-def get_score(hand, face_max = 10):
+def get_score(hand):
     hand = sorted(hand, key = lambda card: card.score, reverse = True)
     score = 0
 
@@ -147,9 +156,6 @@ def get_score(hand, face_max = 10):
             else:
                 score += 11
 
-        elif card.score > face_max:
-            score += face_max
-
         else:
             score += card.score
 
@@ -159,7 +165,7 @@ def blackjack():
     print('-------------------------Blackjack-------------------------\n')
     players = []
     shoe = Deck() # Here the shoe is set up with 4 packs of cards and then shuffled.
-    shoe.card_52(1)             # You can add more or less packs in the argument.
+    shoe.card_52(4)             # You can add more or less packs in the argument.
     shoe.shuffle()
 
     while True:
@@ -271,7 +277,6 @@ def blackjack():
                         continue
 
                     elif player_move == 'double':
-                        player.money -= hand.bid
                         hand.bid += hand.bid
                         print(f'\n{player} has doubled down and has doubled their bid to {hand.bid}')
                         card = shoe.draw_card()
@@ -285,7 +290,6 @@ def blackjack():
 
                     elif player_move =='split':
                         new_deck = Deck() # A new deck is created
-                        player.money -= hand.bid
                         new_deck.bid = hand.bid
                         new_deck.add_card(hand.draw_card(1))
                         player.hands.append(new_deck)
@@ -329,37 +333,36 @@ def blackjack():
         else:
             print(f'\nDealer stands with a score of {dealer.score}\n')
 
-        print("\n-------------------------Calculating Winnings-------------------------\n")
+        print("\n-------------------------Calculating winnings-------------------------\n")
 
         for player in players:
             loss_total = 0 #this is displayed when a player loses money
-            winnings = 0
+            win_total = 0
 
             for hand in player.hands:
-
                 if hand.score > 21: # if player is bust
                     loss_total += hand.bid
 
                 elif (hand.score == 21) and (len(hand) == 2) and (dealer.score < 21):#if player has a natural blackjack and dealer does not have 21
-                    winnings += math.ceil(hand.bid * 2.5)
+                    win_total += math.ceil(hand.bid * 1.5)
 
                 elif dealer.score > 21: # if dealer busts
                     if hand.score < 22:
-                        winnings += hand.bid * 2
+                        win_total += hand.bid * 2
 
                 elif dealer.score < 22: # if dealer does not bust
                     if hand.score > dealer.score:
-                        winnings += hand.bid * 2
+                        win_total += hand.bid * 2
 
                     elif hand.score == dealer.score:
-                        winnings += hand.bid
+                        win_total += hand.bid
 
                     else:
                         loss_total += hand.bid
 
-            if winnings > 0:
-                player.money += winnings
-                print(f'{player.name} has won £{winnings - hand.bid} and now has £{player.money}')
+            if win_total:
+                player.money += win_total
+                print(f'{player.name} has won £{win_total - hand.bid} and now has £{player.money}')
 
             else:
                 print(f'{player.name} has lost £{loss_total} and now has £{player.money}')
