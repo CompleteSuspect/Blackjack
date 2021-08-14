@@ -1,7 +1,7 @@
 # Blackjack
 A Blackjack game for practice!
 
-Hi to anyone who sees this. This is my first OOP Python program, it is finally finished and mostly working!
+This is my first OOP Python program, it is finally finished and mostly working!
 
 A few things that you might find odd:
 
@@ -13,6 +13,4 @@ Again, this is to make it easier to handle split hands.
 
 A player can split a hand as many times as possible with no restriction, also split hands can have a 'natural' blackjack win.
 
-There are a few extra things I could've added, such as an option to Surrender or the shoe having a plastic instert which signifies a reshuffle (this still happens when the shoe is empty though). I've spent far too long on this and it's time to move on.
-
-This has been good practice and I've enjoyed the challenge.
+There are a few extra things I could've added, such as an option to Surrender or the shoe having a plastic instert which signifies a reshuffle (this still happens when the shoe is empty though).
