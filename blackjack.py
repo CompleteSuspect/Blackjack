@@ -86,7 +86,7 @@ class Player():
 
     def __init__(self, name):
         self.name = name
-        self.money = 1000
+        self.money = 5000
         self.hands = [] #A player can have multiple hands
 
     def __str__(self):
@@ -162,7 +162,7 @@ def get_score(hand):
     return score
 
 def blackjack():
-    print('-------------------------Blackjack-------------------------\n')
+    print('\n-------------------------Blackjack-------------------------\n')
     players = []
     shoe = Deck() # Here the shoe is set up with 4 packs of cards and then shuffled.
     shoe.card_52(4)             # You can add more or less packs in the argument.
@@ -231,10 +231,18 @@ def blackjack():
                 print(f'{player.name} has a blackjack!')
 
         for player in [p for p in players if p.hands[0].score < 21]: # main player move loop
+            time.sleep(1)
+            print(f"\n-------------------------{player}'s turn.-------------------------\n")
+
             for hand in player.hands: # for each of the players hands
+                if player.hands.index(hand): # player turn display
+                    time.sleep(1)
+                    print(f"\n-------------------------{player.name}'s split hand #{player.hands.index(hand)}-------------------------\n")
+
                 hand.score = get_score(hand)
 
                 while hand.score < 21: # while the hand is not bust or blackjack
+                    time.sleep(1)
                     moves = ['hit', 'stand']
 
                     if player.money >= hand.bid: # allow player to double
@@ -243,13 +251,6 @@ def blackjack():
                     if (len(hand) == 2 and hand[0].rank == hand[1].rank) and (player.money >= hand.bid):# allow player to split
                         moves.append('split')
 
-                    if not player.hands.index(hand):#player turn display
-                        print(f"\n-------------------------{player}'s turn.-------------------------\n")
-
-                    else :
-                        print(f"\n-------------------------{player.name}'s split hand #{player.hands.index(hand)}-------------------------\n")
-
-                    time.sleep(1)
                     print('You have:')
                     for card in hand:
                         print(card)
@@ -271,29 +272,28 @@ def blackjack():
                     elif player_move == 'hit':
                         card = shoe.draw_card()
                         hand.add_card(card)
-                        print(f"\nDealer added {card} to {player}'s hand")
-                        time.sleep(1)
+                        print(f"\nDealer has added {card} to {player}'s hand\n")
                         hand.score = get_score(hand)
                         continue
 
                     elif player_move == 'double':
                         hand.bid += hand.bid
-                        print(f'\n{player} has doubled down and has doubled their bid to {hand.bid}')
+                        print(f'\n{player} has doubled down and has doubled their bid to {hand.bid}\n')
                         card = shoe.draw_card()
                         hand.add_card(card)
                         time.sleep(1)
-                        print(f"\nDealer added {card} to {player}'s hand")
-                        time.sleep(1)
+                        print(f"\nDealer added {card} to {player}'s hand\n")
                         hand.score = get_score(hand)
+                        time.sleep(1)
                         print(f'\n{player} stands with a score of {hand.score}')
                         break
 
                     elif player_move =='split':
+                        print(f'\n{player.name} has split their hand.')
                         new_deck = Deck() # A new deck is created
                         new_deck.bid = hand.bid
                         new_deck.add_card(hand.draw_card(1))
                         player.hands.append(new_deck)
-                        print(f'\n{player.name} has split their hand.')
                         hand.score = get_score(hand)
                         continue
 
@@ -325,7 +325,7 @@ def blackjack():
             time.sleep(1)
 
         if dealer.score > 21:
-            print(f'\nDealer has bust!\n')
+            print(f'\nDealer has bust with a score of {dealer.score}!\n')
 
         elif dealer.score == 21:
             print(f'\nDealer has a blackjack!\n')
@@ -344,7 +344,7 @@ def blackjack():
                     loss_total += hand.bid
 
                 elif (hand.score == 21) and (len(hand) == 2) and (dealer.score < 21):#if player has a natural blackjack and dealer does not have 21
-                    win_total += math.ceil(hand.bid * 1.5)
+                    win_total += hand.bid + math.ceil(hand.bid * 1.5)
 
                 elif dealer.score > 21: # if dealer busts
                     if hand.score < 22:
