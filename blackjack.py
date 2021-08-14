@@ -289,7 +289,7 @@ def blackjack():
                         break
 
                     elif player_move =='split':
-                        print(f'\n{player.name} has split their hand.')
+                        print(f'\n{player.name} has split their hand.\n')
                         new_deck = Deck() # A new deck is created
                         new_deck.bid = hand.bid
                         new_deck.add_card(hand.draw_card(1))
@@ -298,7 +298,7 @@ def blackjack():
                         continue
 
                 if hand.score > 21:
-                    print(f'\n{player} has bust with a score of {hand.score}!')
+                    print(f'\n{player} has bust with a score of {hand.score}!\n')
                     print(f'{player} has lost their bid of £{hand.bid}!\n')
 
                 elif hand.score == 21:
