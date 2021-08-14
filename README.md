@@ -1,7 +1,7 @@
 # Blackjack
 A Blackjack game for practice!
 
-Hi to anyone who sees this. This is my first OOP Python program, it is finally finished and mostly working!
+This is my first OOP Python program, it is finally finished and mostly working!
 
 A few things that you might find odd:
 
