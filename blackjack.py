@@ -76,7 +76,7 @@ class Deck():
                 print('draw_card error:', e)
 
     def add_card(self, card):
-        if type(card) == Card:
+        if isinstance(card, Card):
             self.cards.append(card)
 
         else:
